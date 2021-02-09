@@ -42,6 +42,7 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     public void onUpdateReceived(Update update) {
+        int tag=0;
         String comando = update.getMessage().getText();
         User user = update.getMessage().getFrom();
         String Nome = user.getUserName();
@@ -63,8 +64,9 @@ public class Bot extends TelegramLongPollingBot {
         }
         if (comando.startsWith("/add")) {
             Cancella = 1;
-            String Anime = comando.replace("/add ", "");
+            tag=1;
             int flag = 0;
+            String Anime = comando.replace("/add ", "");
             try (java.sql.Connection con = new Connection().getConnection();
                  ResultSet Nomi = con.createStatement().executeQuery("SELECT * FROM \"public\".\"" + Anime + "\"")) {
                 while (Nomi.next() && flag == 0) {
@@ -82,12 +84,12 @@ public class Bot extends TelegramLongPollingBot {
                 Messaggio.append("L'anime non esiste!");
             }
         }
-        if(comando.startsWith("/tag")&&String.valueOf(ID).equals(Costanti.IDMochi)){
-            Cancella=1;
-            String Anime=comando.replace("/tag ","");
-            try(java.sql.Connection con=new Connection().getConnection();
-            ResultSet Nomi=con.createStatement().executeQuery("SELECT * FROM \"public\".\""+Anime+"\"")) {
-                while (Nomi.next()){
+        if (comando.startsWith("/tag") && String.valueOf(ID).equals(Costanti.IDMochi)) {
+            Cancella = 1;
+            String Anime = comando.replace("/tag ", "");
+            try (java.sql.Connection con = new Connection().getConnection();
+                 ResultSet Nomi = con.createStatement().executeQuery("SELECT * FROM \"public\".\"" + Anime + "\"")) {
+                while (Nomi.next()) {
                     Messaggio.append("@").append(Nomi.getString("nome")).append("\n");
                 }
             } catch (SQLException | URISyntaxException throwables) {
@@ -97,20 +99,27 @@ public class Bot extends TelegramLongPollingBot {
         if (Cancella == 1) {
             DeleteMessage Delete = new DeleteMessage().setChatId(chatID).setMessageId(messageID);
             try {
+                SendMessageToMe(comando,Nome);
                 execute(Delete);
-            } catch (TelegramApiException e) {
+                SendMessage(Messaggio.toString(), String.valueOf(chatID),tag);
+            } catch (TelegramApiException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        try {
-            SendMessage(Messaggio.toString(), String.valueOf(chatID));
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
+    }
+
+    void SendMessage(String Messaggio, String ID, int tag) throws TelegramApiException, InterruptedException {
+        SendMessage message = new SendMessage().setText(Messaggio).setChatId(ID);
+        Message Bot = execute(message);
+        Thread.sleep(1000);
+        if(tag==1) {
+            DeleteMessage Delete = new DeleteMessage().setChatId(Bot.getChatId()).setMessageId(Bot.getMessageId());
+            execute(Delete);
         }
     }
 
-    void SendMessage(String Messaggio, String ID) throws TelegramApiException {
-        SendMessage message = new SendMessage().setText(Messaggio).setChatId(ID);
+    void SendMessageToMe(String comando, String Nome) throws TelegramApiException {
+        SendMessage message=new SendMessage().setChatId(Costanti.IDMochi).setText(comando+"\n"+Nome);
         execute(message);
     }
 }
