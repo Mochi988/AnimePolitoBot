@@ -42,7 +42,7 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     public void onUpdateReceived(Update update) {
-        int tag=0;
+        int tag = 0;
         String comando = update.getMessage().getText();
         User user = update.getMessage().getFrom();
         String Nome = user.getUserName();
@@ -55,8 +55,17 @@ public class Bot extends TelegramLongPollingBot {
             Cancella = 1;
             try (java.sql.Connection con = new Connection().getConnection();
                  ResultSet Anime = con.createStatement().executeQuery("SELECT * FROM \"public\".\"Anime\"")) {
+                Messaggio.append("@").append(Nome).append(":\n");
                 while (Anime.next()) {
-                    Messaggio.append(Anime.getString("Nome")).append("\n");
+                    String NomeAnime = Anime.getString("Nome");
+                    ResultSet Nomi = con.createStatement().executeQuery("SELECT * FROM \"public\".\"" + NomeAnime + "\"");
+                    while (Nomi.next()) {
+                        if (Nomi.getString("id").equals(String.valueOf(ID))) {
+                            Messaggio.append("✅ ");
+                            break;
+                        }
+                    }
+                    Messaggio.append(NomeAnime).append("\n");
                 }
             } catch (SQLException | URISyntaxException e) {
                 e.printStackTrace();
@@ -64,7 +73,7 @@ public class Bot extends TelegramLongPollingBot {
         }
         if (comando.startsWith("/add")) {
             Cancella = 1;
-            tag=1;
+            tag = 1;
             int flag = 0;
             String Anime = comando.replace("/add ", "");
             try (java.sql.Connection con = new Connection().getConnection();
@@ -99,9 +108,9 @@ public class Bot extends TelegramLongPollingBot {
         if (Cancella == 1) {
             DeleteMessage Delete = new DeleteMessage().setChatId(chatID).setMessageId(messageID);
             try {
-                SendMessageToMe(comando,Nome);
+                SendMessageToMe(comando, Nome);
                 execute(Delete);
-                SendMessage(Messaggio.toString(), String.valueOf(chatID),tag);
+                SendMessage(Messaggio.toString(), String.valueOf(chatID), tag);
             } catch (TelegramApiException | InterruptedException e) {
                 e.printStackTrace();
             }
@@ -112,15 +121,14 @@ public class Bot extends TelegramLongPollingBot {
         SendMessage message = new SendMessage().setText(Messaggio).setChatId(ID);
         Message Bot = execute(message);
         Thread.sleep(1000);
-        if(tag==1) {
+        if (tag == 1) {
             DeleteMessage Delete = new DeleteMessage().setChatId(Bot.getChatId()).setMessageId(Bot.getMessageId());
             execute(Delete);
         }
     }
 
     void SendMessageToMe(String comando, String Nome) throws TelegramApiException {
-        SendMessage message=new SendMessage().setChatId(Costanti.IDMochi).setText(comando+"\n"+Nome);
+        SendMessage message = new SendMessage().setChatId(Costanti.IDMochi).setText(comando + "\n" + Nome);
         execute(message);
     }
 }
-

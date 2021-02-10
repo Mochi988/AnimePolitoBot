@@ -50,6 +50,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.vdurmont</groupId>
+            <artifactId>emoji-java</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.2.12.jre7</version>
@@ -60,6 +66,8 @@
             <version>16.0.1</version>
             <scope>compile</scope>
         </dependency>
+
+
 
     </dependencies>
 
